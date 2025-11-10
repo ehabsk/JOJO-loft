@@ -81,3 +81,11 @@ CREATE TABLE chicks (
     image TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+الخطوة 3: الحصول على مفاتيح API
+
+    اذهب إلى Project Settings → API
+    انسخ Project URL و anon public key
+    افتح ملف pigeon_system.html في المتصفح
+    أدخل المفاتيح في تبويب "الإعدادات"
+    اضغط "اختبار الاتصال" ✅
+
