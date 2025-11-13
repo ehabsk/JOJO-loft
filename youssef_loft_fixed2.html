@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐦 Youssef_Loft - نظام إدارة المزرعة</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.min.js"></script>
+    <style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --primary: #22c55e;
+    --primary-soft: #16a34a;
+    --secondary: #38bdf8;
+    --danger: #ef4444;
+    --warning: #f97316;
+    --success: #22c55e;
+    --info: #06b6d4;
+    --dark: #020617;
+    --soft-dark: #0b1120;
+    --card-dark: #020617;
+    --light: #f9fafb;
+    --accent: #a855f7;
+}
+
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background:
+        radial-gradient(circle at 0% 0%, rgba(34,197,94,0.09), transparent 55%),
+        radial-gradient(circle at 100% 100%, rgba(56,189,248,0.09), transparent 55%),
+        #020617;
+    min-height: 100vh;
+    font-size: 14px;
+    color: #e5e7eb;
+}
+
+/* Navigation */
+nav {
+    background: linear-gradient(120deg, #020617, #020617);
+    box-shadow:
+        0 18px 40px rgba(15,23,42,0.9),
+        0 0 0 1px rgba(15,23,42,0.9);
+    border-radius: 999px;
+    margin: 12px auto 18px;
+    max-width: 1400px;
+    position: sticky;
+    top: 10px;
+    z-index: 1000;
+    padding: 6px 10px;
+}
+
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Logo */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #e5e7eb;
+}
+
+.logo span:first-child {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    background: radial-gradient(circle at 30% 20%, #facc15, #f97316);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 25px rgba(250,204,21,0.5);
+}
+
+/* Nav links */
+.nav-links {
+    display: flex;
+    gap: 4px;
+    list-style: none;
+    flex-wrap: wrap;
+    padding: 4px;
+    border-radius: 999px;
+    background: rgba(15,23,42,0.95);
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #e5e7eb;
+    padding: 6px 14px;
+    border-radius: 999px;
+    transition: all 0.2s ease;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.nav-links a:hover {
+    background: rgba(15,23,42,0.75);
+    transform: translateY(-1px);
+}
+
+.nav-links a.active {
+    background: radial-gradient(circle at 0 0, #22c55e, #16a34a);
+    color: #052e16;
+    box-shadow: 0 10px 24px rgba(34,197,94,0.7);
+}
+
+/* Connection badge */
+.connection-badge {
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(148,163,184,0.6);
+}
+
+.connection-badge.connected {
+    background: radial-gradient(circle at 0 0, #22c55e, #16a34a);
+    color: #022c22;
+    border-color: rgba(34,197,94,0.8);
+    box-shadow: 0 8px 20px rgba(34,197,94,0.7);
+}
+
+.connection-badge.disconnected {
+    background: radial-gradient(circle at 0 0, #ef4444, #b91c1c);
+    color: #fef2f2;
+    border-color: rgba(248,113,113,0.9);
+    box-shadow: 0 8px 20px rgba(248,113,113,0.6);
+}
+
+/* Main container */
+.container {
+    max-width: 1400px;
+    margin: 0 auto 30px;
+    background:
+        radial-gradient(circle at 0 0, rgba(34,197,94,0.12), transparent 60%),
+        radial-gradient(circle at 100% 100%, rgba(56,189,248,0.12), transparent 60%),
+        linear-gradient(135deg, #020617, #020617);
+    padding: 22px 20px 24px;
+    border-radius: 26px;
+    box-shadow:
+        0 24px 60px rgba(15,23,42,0.85),
+        0 0 0 1px rgba(15,23,42,0.9);
+    border: 1px solid rgba(30,64,175,0.7);
+}
+
+/* Pages */
+.page {
+    display: none;
+}
+.page.active {
+    display: block;
+}
+
+/* Headings */
+h1 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 1.6rem;
+    background: linear-gradient(135deg, #e5e7eb, #22c55e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+h1 span:first-child { font-size: 1.7rem; }
+
+h2 {
+    color: #e5e7eb;
+    margin: 18px 0 10px;
+    font-size: 1.1rem;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(148,163,184,0.4);
+}
+
+h3 {
+    color: #e5e7eb;
+    margin: 18px 0 10px;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Dashboard stats */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin: 16px 0 10px;
+}
+
+.stat-card {
+    background: radial-gradient(circle at 0 0, rgba(34,197,94,0.2), rgba(15,23,42,0.96));
+    color: #e5e7eb;
+    padding: 16px 16px 14px;
+    border-radius: 18px;
+    box-shadow:
+        0 16px 36px rgba(0,0,0,0.65),
+        0 0 0 1px rgba(30,64,175,0.6);
+    transition: all 0.25s ease;
+}
+
+.stat-card.blue {
+    background: radial-gradient(circle at 0 0, rgba(59,130,246,0.25), rgba(15,23,42,0.96));
+}
+.stat-card.orange {
+    background: radial-gradient(circle at 0 0, rgba(249,115,22,0.25), rgba(15,23,42,0.96));
+}
+.stat-card.purple {
+    background: radial-gradient(circle at 0 0, rgba(168,85,247,0.25), rgba(15,23,42,0.96));
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow:
+        0 22px 50px rgba(0,0,0,0.9),
+        0 0 0 1px rgba(148,163,184,0.9);
+}
+
+.stat-card h3 { margin: 0 0 6px; font-size: 1rem; }
+.stat-card p  { font-size: 0.85rem; color: #cbd5f5; }
+
+.stat-card .stat-number {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 8px 0 4px;
+}
+
+.stat-card .stat-details {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: #cbd5f5;
+}
+
+/* Forms */
+.form-section {
+    background: rgba(15,23,42,0.96);
+    border-radius: 18px;
+    padding: 16px 14px 14px;
+    margin: 16px 0;
+    border: 1px solid rgba(30,64,175,0.7);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.7);
+    display: none;
+}
+.form-section.active { display: block; }
+
+.form-group { margin-bottom: 10px; }
+
+label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #e5e7eb;
+}
+.required { color: var(--danger); }
+
+input, select, textarea {
+    width: 100%;
+    padding: 7px 9px;
+    border-radius: 10px;
+    border: 1px solid rgba(148,163,184,0.7);
+    background: #020617;
+    color: #e5e7eb;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #22c55e;
+    box-shadow: 0 0 0 1px rgba(34,197,94,0.6);
+}
+textarea { resize: vertical; min-height: 60px; }
+
+/* Buttons */
+button {
+    background: radial-gradient(circle at 0 0, #22c55e, #16a34a);
+    color: #052e16;
+    padding: 7px 16px;
+    border: none;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin: 4px 2px;
+}
+button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 26px rgba(34,197,94,0.6);
+}
+button.secondary {
+    background: radial-gradient(circle at 0 0, #38bdf8, #0ea5e9);
+    color: #0f172a;
+}
+button.danger {
+    background: radial-gradient(circle at 0 0, #ef4444, #b91c1c);
+    color: #fef2f2;
+}
+button.warning {
+    background: radial-gradient(circle at 0 0, #f97316, #ea580c);
+    color: #0f172a;
+}
+button.info {
+    background: radial-gradient(circle at 0 0, #06b6d4, #0ea5e9);
+    color: #022c22;
+}
+button.small {
+    padding: 4px 10px;
+    font-size: 0.78rem;
+}
+
+/* Cards (lists) */
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+    margin: 16px 0;
+}
+.card {
+    background: radial-gradient(circle at 0 0, rgba(15,23,42,1), rgba(15,23,42,0.96));
+    border-radius: 16px;
+    padding: 14px 14px 12px;
+    box-shadow:
+        0 16px 40px rgba(0,0,0,0.8),
+        0 0 0 1px rgba(30,64,175,0.7);
+    border: 1px solid rgba(30,64,175,0.6);
+    transition: all 0.25s ease;
+    color: #e5e7eb;
+}
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow:
+        0 22px 55px rgba(0,0,0,0.95),
+        0 0 0 1px rgba(148,163,184,0.9);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed rgba(148,163,184,0.6);
+    margin-bottom: 8px;
+}
+.card-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+.card-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.84rem;
+    margin: 3px 0;
+    color: #cbd5f5;
+}
+.card-info-label {
+    font-weight: 600;
+    color: #e5e7eb;
+}
+
+.card-image {
+    width: 100%;
+    height: 140px;
+    border-radius: 12px;
+    object-fit: cover;
+    margin-bottom: 10px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.7);
+}
+
+/* Status badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 700;
+}
+.status-حي {
+    background: rgba(22,163,74,0.16);
+    color: #4ade80;
+    border: 1px solid rgba(34,197,94,0.8);
+}
+.status-متوفي {
+    background: rgba(75,85,99,0.2);
+    color: #e5e7eb;
+    border: 1px solid rgba(75,85,99,0.8);
+}
+.status-مباع {
+    background: rgba(249,115,22,0.16);
+    color: #fdba74;
+    border: 1px solid rgba(249,115,22,0.8);
+}
+.status-أصبح-أب {
+    background: rgba(59,130,246,0.16);
+    color: #93c5fd;
+    border: 1px solid rgba(59,130,246,0.8);
+}
+
+/* Countdown */
+.countdown {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    color: #0f172a;
+    padding: 6px 10px;
+    border-radius: 10px;
+    text-align: center;
+    margin-top: 8px;
+    font-weight: 700;
+    font-size: 0.82rem;
+}
+.countdown.warning {
+    background: linear-gradient(135deg, #eab308, #facc15);
+}
+.countdown.critical {
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    color: #fee2e2;
+}
+
+/* Search bar */
+.search-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 14px 0;
+    padding: 10px 12px;
+    background: rgba(15,23,42,0.96);
+    border-radius: 14px;
+    border: 1px solid rgba(30,64,175,0.7);
+}
+.search-bar input {
+    flex: 1;
+    min-width: 180px;
+}
+.search-bar select {
+    min-width: 130px;
+}
+
+/* Image preview */
+.image-preview {
+    width: 90px;
+    height: 90px;
+    border-radius: 12px;
+    border: 1px dashed rgba(148,163,184,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    color: #9ca3af;
+    background: #020617;
+    overflow: hidden;
+}
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 40px 12px;
+    color: #9ca3af;
+}
+.empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 8px;
+    opacity: 0.7;
+}
+.empty-state-text {
+    font-size: 1rem;
+    margin-bottom: 6px;
+    font-weight: 700;
+    color: #e5e7eb;
+}
+.empty-state-subtext {
+    font-size: 0.85rem;
+    color: #9ca3af;
+}
+
+/* Modal & toast */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,0.85);
+    backdrop-filter: blur(10px);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+}
+.modal-content {
+    background: radial-gradient(circle at 0 0, rgba(34,197,94,0.12), transparent 55%),
+                rgba(15,23,42,0.98);
+    padding: 18px 16px 16px;
+    border-radius: 20px;
+    max-width: 460px;
+    width: 92%;
+    box-shadow:
+        0 22px 60px rgba(0,0,0,0.9),
+        0 0 0 1px rgba(30,64,175,0.8);
+    color: #e5e7eb;
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(148,163,184,0.6);
+}
+.modal-title {
+    font-weight: 800;
+    font-size: 1.05rem;
+}
+.modal-close {
+    background: radial-gradient(circle at 0 0, #ef4444, #b91c1c);
+    color: #fee2e2;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 0.78rem;
+}
+
+.toast {
+    position: fixed;
+    top: 80px;
+    inset-inline-end: 18px;
+    background: rgba(15,23,42,0.98);
+    padding: 10px 14px;
+    border-radius: 14px;
+    box-shadow:
+        0 18px 40px rgba(0,0,0,0.9),
+        0 0 0 1px rgba(30,64,175,0.9);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 10000;
+    font-size: 0.85rem;
+    color: #e5e7eb;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    nav {
+        border-radius: 18px;
+    }
+    .nav-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+@media (max-width: 768px) {
+    .container {
+        border-radius: 18px;
+        padding: 16px 12px 18px;
+    }
+    .cards { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo"><span>🐦</span><span>Youssef_Loft</span></div>
+            <ul class="nav-links">
+                <li><a href="#" onclick="showPage('dashboard', this); return false;" class="active">📊 الرئيسية</a></li>
+                <li><a href="#" onclick="showPage('parents', this); return false;">🐦 الطيور</a></li>
+                <li><a href="#" onclick="showPage('eggs', this); return false;">🥚 البيض</a></li>
+                <li><a href="#" onclick="showPage('chicks', this); return false;">🐤 الأفراخ</a></li>
+                <li><a href="#" onclick="showPage('settings', this); return false;">⚙️ الإعدادات</a></li>
+            </ul>
+            <div class="connection-badge disconnected" id="connBadge">
+                <span id="connText">🔴 غير متصل</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="page active">
+        <div class="container">
+            <h1><span>📊</span> لوحة التحكم</h1>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🐦</div>
+                    <div class="stat-label">الطيور</div>
+                    <div class="stat-number" id="dTotalP">0</div>
+                    <div class="stat-details">
+                        <div><div class="stat-detail-value" id="dPA">0</div><div class="stat-detail-label">حي</div></div>
+                        <div><div class="stat-detail-value" id="dPD">0</div><div class="stat-detail-label">متوفي</div></div>
+                        <div><div class="stat-detail-value" id="dPS">0</div><div class="stat-detail-label">مباع</div></div>
+                    </div>
+                </div>
+                <div class="stat-card blue">
+                    <div class="stat-icon">🥚</div>
+                    <div class="stat-label">البيض</div>
+                    <div class="stat-number" id="dTotalE">0</div>
+                    <div class="stat-details">
+                        <div><div class="stat-detail-value" id="dEI">0</div><div class="stat-detail-label">التحضين</div></div>
+                        <div><div class="stat-detail-value" id="dEH">0</div><div class="stat-detail-label">فقس</div></div>
+                        <div><div class="stat-detail-value" id="dEF">0</div><div class="stat-detail-label">فشل</div></div>
+                    </div>
+                </div>
+                <div class="stat-card orange">
+                    <div class="stat-icon">🐤</div>
+                    <div class="stat-label">الأفراخ</div>
+                    <div class="stat-number" id="dTotalC">0</div>
+                    <div class="stat-details">
+                        <div><div class="stat-detail-value" id="dCA">0</div><div class="stat-detail-label">حي</div></div>
+                        <div><div class="stat-detail-value" id="dCD">0</div><div class="stat-detail-label">متوفي</div></div>
+                        <div><div class="stat-detail-value" id="dCS">0</div><div class="stat-detail-label">مباع</div></div>
+                    </div>
+                </div>
+                <div class="stat-card purple">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-label">الإنتاج</div>
+                    <div class="stat-number" id="dHR">0%</div>
+                    <div class="stat-details">
+                        <div><div class="stat-detail-value" id="dSR">0%</div><div class="stat-detail-label">البقاء</div></div>
+                        <div><div class="stat-detail-value" id="dAP">0</div><div class="stat-detail-label">أزواج</div></div>
+                        <div><div class="stat-detail-value" id="dBP">0</div><div class="stat-detail-label">أصبح أب</div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button onclick="exportData()" class="secondary">📥 تصدير</button>
+                <button onclick="window.print()" class="secondary">🖨️ طباعة</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Parents Page -->
+    <div id="parents" class="page">
+        <div class="container">
+            <h1><span>🐦</span> إدارة الطيور</h1>
+            <div class="add-btn-container">
+                <button class="add-btn" onclick="toggleForm('parentForm')">
+                    <span>➕</span><span>إضافة طائر</span>
+                </button>
+            </div>
+            <div id="parentForm" class="form-section">
+                <div class="form-header">
+                    <div class="form-title">📝 تسجيل طائر جديد</div>
+                    <button class="close-form-btn" onclick="toggleForm('parentForm')">✖️</button>
+                </div>
+                <div class="form-group">
+                    <label>الكود: <span class="required">*</span></label>
+                    <input type="text" id="pCode" required placeholder="كود فريد">
+                </div>
+                <div class="form-group">
+                    <label>الجنس: <span class="required">*</span></label>
+                    <select id="pGender" required>
+                        <option value="">اختر</option>
+                        <option value="ذكر">ذكر ♂️</option>
+                        <option value="أنثى">أنثى ♀️</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>الاسم:</label>
+                    <input type="text" id="pName" placeholder="اختياري">
+                </div>
+                <div class="form-group">
+                    <label>النوع:</label>
+                    <input type="text" id="pType" placeholder="زاجل، بلدي">
+                </div>
+                <div class="form-group">
+                    <label>اللون:</label>
+                    <input type="text" id="pColor" placeholder="أبيض، رمادي">
+                </div>
+                <div class="form-group">
+                    <label>الحالة:</label>
+                    <select id="pStatus">
+                        <option value="حي">حي</option>
+                        <option value="متوفي">متوفي</option>
+                        <option value="مباع">مباع</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>صورة:</label>
+                    <input type="file" id="pImg" accept="image/*" onchange="prevImg(this,'pImgPrev')">
+                    <div class="image-preview" id="pImgPrev">📷</div>
+                </div>
+                <div class="form-group">
+                    <label>ملاحظات:</label>
+                    <textarea id="pNotes" rows="2" placeholder="ملاحظات..."></textarea>
+                </div>
+                <button onclick="addParent()">✅ تسجيل</button>
+                <button onclick="clearParentForm()" class="secondary">🔄 مسح</button>
+            </div>
+            <h3>📚 الطيور المسجلة</h3>
+            <div class="search-bar">
+                <input type="text" id="pSearch" placeholder="🔍 بحث..." oninput="filterParents()">
+                <select id="pGenderF" onchange="filterParents()">
+                    <option value="all">كل الأجناس</option>
+                    <option value="ذكر">ذكور</option>
+                    <option value="أنثى">إناث</option>
+                </select>
+                <select id="pStatusF" onchange="filterParents()">
+                    <option value="all">كل الحالات</option>
+                    <option value="حي">حي</option>
+                    <option value="متوفي">متوفي</option>
+                    <option value="مباع">مباع</option>
+                </select>
+            </div>
+            <div class="cards" id="parentsList"></div>
+        </div>
+    </div>
+
+    <!-- Eggs Page -->
+    <div id="eggs" class="page">
+        <div class="container">
+            <h1><span>🥚</span> إدارة البيض</h1>
+            <div class="add-btn-container">
+                <button class="add-btn" onclick="toggleForm('eggForm')">
+                    <span>➕</span><span>إضافة بيض</span>
+                </button>
+            </div>
+            <div id="eggForm" class="form-section">
+                <div class="form-header">
+                    <div class="form-title">📝 تسجيل بيض جديد</div>
+                    <button class="close-form-btn" onclick="toggleForm('eggForm')">✖️</button>
+                </div>
+                <div class="form-group">
+                    <label>الذكر: <span class="required">*</span></label>
+                    <select id="eMale" required></select>
+                </div>
+                <div class="form-group">
+                    <label>الأنثى: <span class="required">*</span></label>
+                    <select id="eFemale" required></select>
+                </div>
+                <div class="form-group">
+                    <label>رقم القفص: <span class="required">*</span></label>
+                    <input type="text" id="eCage" required placeholder="قفص-1">
+                </div>
+                <div class="form-group">
+                    <label>تاريخ الوضع: <span class="required">*</span></label>
+                    <input type="date" id="eDate" required>
+                </div>
+                <div class="form-group">
+                    <label>ملاحظات:</label>
+                    <textarea id="eNotes" rows="2" placeholder="ملاحظات..."></textarea>
+                </div>
+                <button onclick="addEgg()">✅ تسجيل</button>
+                <button onclick="clearEggForm()" class="secondary">🔄 مسح</button>
+            </div>
+            <h3>🥚 البيض المسجل</h3>
+            <div class="search-bar">
+                <input type="text" id="eSearch" placeholder="🔍 بحث..." oninput="filterEggs()">
+                <select id="eStatusF" onchange="filterEggs()">
+                    <option value="all">كل الحالات</option>
+                    <option value="قيد التحضين">التحضين</option>
+                    <option value="تم الفقس">فقس</option>
+                    <option value="فشل الفقس">فشل</option>
+                </select>
+            </div>
+            <div class="cards" id="eggsList"></div>
+        </div>
+    </div>
+
+    <!-- Chicks Page -->
+    <div id="chicks" class="page">
+        <div class="container">
+            <h1><span>🐤</span> إدارة الأفراخ</h1>
+            <div class="add-btn-container">
+                <button class="add-btn" onclick="toggleForm('chickForm')">
+                    <span>➕</span><span>إضافة فرخ</span>
+                </button>
+            </div>
+            <div id="chickForm" class="form-section">
+                <div class="form-header">
+                    <div class="form-title">📝 تسجيل فرخ جديد</div>
+                    <button class="close-form-btn" onclick="toggleForm('chickForm')">✖️</button>
+                </div>
+                <div class="form-group">
+                    <label>البيضة: <span class="required">*</span></label>
+                    <select id="cEgg" required></select>
+                </div>
+                <div class="form-group">
+                    <label>تاريخ الفقس: <span class="required">*</span></label>
+                    <input type="date" id="cDate" required>
+                </div>
+                <div class="form-group">
+                    <label>الاسم:</label>
+                    <input type="text" id="cName" placeholder="اختياري">
+                </div>
+                <div class="form-group">
+                    <label>الكود:</label>
+                    <input type="text" id="cCode" placeholder="اختياري">
+                </div>
+                <div class="form-group">
+                    <label>رقم الحلقة:</label>
+                    <input type="text" id="cRing" placeholder="2024-100">
+                </div>
+                <div class="form-group">
+                    <label>الجنس:</label>
+                    <select id="cGender">
+                        <option value="">غير محدد</option>
+                        <option value="ذكر">ذكر ♂️</option>
+                        <option value="أنثى">أنثى ♀️</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>النوع:</label>
+                    <input type="text" id="cType" placeholder="زاجل">
+                </div>
+                <div class="form-group">
+                    <label>اللون:</label>
+                    <input type="text" id="cColor" placeholder="أبيض">
+                </div>
+                <div class="form-group">
+                    <label>الحالة:</label>
+                    <select id="cStatus">
+                        <option value="حي">حي</option>
+                        <option value="متوفي">متوفي</option>
+                        <option value="مباع">مباع</option>
+                        <option value="أصبح أب">أصبح أب</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>صورة:</label>
+                    <input type="file" id="cImg" accept="image/*" onchange="prevImg(this,'cImgPrev')">
+                    <div class="image-preview" id="cImgPrev">📷</div>
+                </div>
+                <div class="form-group">
+                    <label>ملاحظات:</label>
+                    <textarea id="cNotes" rows="2" placeholder="ملاحظات..."></textarea>
+                </div>
+                <button onclick="addChick()">✅ تسجيل</button>
+                <button onclick="clearChickForm()" class="secondary">🔄 مسح</button>
+            </div>
+            <h3>🐤 الأفراخ المسجلة</h3>
+            <div class="search-bar">
+                <input type="text" id="cSearch" placeholder="🔍 بحث..." oninput="filterChicks()">
+                <select id="cGenderF" onchange="filterChicks()">
+                    <option value="all">كل الأجناس</option>
+                    <option value="ذكر">ذكور</option>
+                    <option value="أنثى">إناث</option>
+                </select>
+                <select id="cStatusF" onchange="filterChicks()">
+                    <option value="all">كل الحالات</option>
+                    <option value="حي">حي</option>
+                    <option value="متوفي">متوفي</option>
+                    <option value="مباع">مباع</option>
+                    <option value="أصبح أب">أصبح أب</option>
+                </select>
+            </div>
+            <div class="cards" id="chicksList"></div>
+        </div>
+    </div>
+
+    <!-- Settings Page -->
+    <div id="settings" class="page">
+        <div class="container">
+            <h1><span>⚙️</span> الإعدادات</h1>
+            <div class="form-section active">
+                <h2>🔗 اتصال Supabase</h2>
+                <div class="form-group">
+                    <label>Supabase URL:</label>
+                    <input type="url" id="sbUrl" placeholder="https://xxxxx.supabase.co">
+                </div>
+                <div class="form-group">
+                    <label>Supabase Key:</label>
+                    <input type="password" id="sbKey" placeholder="eyJhbGci...">
+                </div>
+                <button onclick="connectSb()">🔗 اتصال</button>
+                <button onclick="testSb()" class="secondary">🧪 اختبار</button>
+                <button onclick="syncAll()" class="info">🔄 تحديث</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">✏️ تعديل</div>
+                <button class="modal-close" onclick="closeModal()">✖️</button>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        let sb=null,parents=[],eggs=[],chicks=[];
+        function toast(msg,type='info'){const i={success:'✅',error:'❌',warning:'⚠️',info:'ℹ️'};const d=document.createElement('div');d.className=`toast ${type}`;d.innerHTML=`<span style="font-size:1.3rem">${i[type]}</span><span>${msg}</span>`;document.body.appendChild(d);setTimeout(()=>d.remove(),3000);}
+        function showPage(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('active'));document.getElementById(p).classList.add('active');event.target.classList.add('active');}
+        function toggleForm(formId){document.getElementById(formId).classList.toggle('active');}
+        function clearParentForm(){clearForm(['pCode','pGender','pName','pType','pColor','pStatus','pNotes','pImg']);document.getElementById('pImgPrev').innerHTML='📷';}
+        function clearEggForm(){clearForm(['eCage','eNotes']);document.getElementById('eDate').value=new Date().toISOString().split('T')[0];}
+        function clearChickForm(){clearForm(['cName','cCode','cRing','cGender','cType','cColor','cStatus','cNotes','cImg']);document.getElementById('cImgPrev').innerHTML='📷';document.getElementById('cDate').value=new Date().toISOString().split('T')[0];}
+        async function connectSb(){try{const u=document.getElementById('sbUrl').value.trim();const k=document.getElementById('sbKey').value.trim();if(!u||!k){toast('أدخل البيانات','warning');return;}sb=window.supabase.createClient(u,k);const{error}=await sb.from('parents').select('count',{count:'exact',head:true});if(error)throw error;localStorage.setItem('sbUrl',u);localStorage.setItem('sbKey',k);document.getElementById('connBadge').className='connection-badge connected';document.getElementById('connText').textContent='🟢 متصل';toast('تم الاتصال ✅','success');await loadAll();}catch(e){toast('فشل: '+e.message,'error');}}
+        async function testSb(){if(!sb){toast('اتصل أولاً','warning');return;}try{await sb.from('parents').select('count',{count:'exact',head:true});toast('الاتصال يعمل ✅','success');}catch(e){toast('فشل: '+e.message,'error');}}
+        async function loadAll(){if(!sb)return;try{const[p,e,c]=await Promise.all([sb.from('parents').select('*').order('created_at',{ascending:false}),sb.from('eggs').select('*').order('created_at',{ascending:false}),sb.from('chicks').select('*').order('created_at',{ascending:false})]);parents=p.data||[];eggs=e.data||[];chicks=c.data||[];updateDash();showParents();showEggs();showChicks();updateDrops();toast('تم التحميل ✅','success');}catch(e){toast('خطأ: '+e.message,'error');}}
+        async function syncAll(){await loadAll();}
+        function updateDash(){document.getElementById('dTotalP').textContent=parents.length;document.getElementById('dPA').textContent=parents.filter(p=>p.status==='حي').length;document.getElementById('dPD').textContent=parents.filter(p=>p.status==='متوفي').length;document.getElementById('dPS').textContent=parents.filter(p=>p.status==='مباع').length;document.getElementById('dTotalE').textContent=eggs.length;document.getElementById('dEI').textContent=eggs.filter(e=>e.status==='قيد التحضين').length;document.getElementById('dEH').textContent=eggs.filter(e=>e.status==='تم الفقس').length;document.getElementById('dEF').textContent=eggs.filter(e=>e.status==='فشل الفقس').length;document.getElementById('dTotalC').textContent=chicks.length;document.getElementById('dCA').textContent=chicks.filter(c=>c.status==='حي').length;document.getElementById('dCD').textContent=chicks.filter(c=>c.status==='متوفي').length;document.getElementById('dCS').textContent=chicks.filter(c=>c.status==='مباع').length;const bp=chicks.filter(c=>c.status==='أصبح أب').length;document.getElementById('dBP').textContent=bp;const hr=eggs.length>0?Math.round((eggs.filter(e=>e.status==='تم الفقس').length/eggs.length)*100):0;const sr=chicks.length>0?Math.round((chicks.filter(c=>c.status==='حي').length/chicks.length)*100):0;const m=parents.filter(p=>p.gender==='ذكر'&&p.status==='حي').length;const f=parents.filter(p=>p.gender==='أنثى'&&p.status==='حي').length;document.getElementById('dHR').textContent=hr+'%';document.getElementById('dSR').textContent=sr+'%';document.getElementById('dAP').textContent=Math.min(m,f);}
+        async function addParent(){if(!sb){toast('اتصل أولاً','warning');return;}const code=document.getElementById('pCode').value.trim();const gender=document.getElementById('pGender').value;if(!code||!gender){toast('الكود والجنس مطلوبان','error');return;}try{const img=document.getElementById('pImg').files[0];let imgB64=null;if(img)imgB64=await toB64(img);await sb.from('parents').insert([{code,gender,name:document.getElementById('pName').value.trim()||null,type:document.getElementById('pType').value.trim()||null,color:document.getElementById('pColor').value.trim()||null,status:document.getElementById('pStatus').value,notes:document.getElementById('pNotes').value.trim()||null,image:imgB64}]);toast('تم التسجيل ✅','success');clearParentForm();toggleForm('parentForm');await loadAll();}catch(e){toast('خطأ: '+e.message,'error');}}
+        async function addEgg(){if(!sb){toast('اتصل أولاً','warning');return;}const mId=document.getElementById('eMale').value;const fId=document.getElementById('eFemale').value;const cage=document.getElementById('eCage').value.trim();const date=document.getElementById('eDate').value;if(!mId||!fId||!cage||!date){toast('املأ الحقول المطلوبة','error');return;}const m=parents.find(p=>p.id===mId);const f=parents.find(p=>p.id===fId);const exp=new Date(date);exp.setDate(exp.getDate()+18);try{await sb.from('eggs').insert([{male_id:mId,female_id:fId,male_name:m?(m.name||m.code):null,female_name:f?(f.name||f.code):null,cage_number:cage,egg_date:date,expected_hatch_date:exp.toISOString().split('T')[0],status:'قيد التحضين',chicks_count:0,notes:document.getElementById('eNotes').value.trim()||null}]);toast('تم التسجيل ✅','success');clearEggForm();toggleForm('eggForm');await loadAll();}catch(e){toast('خطأ: '+e.message,'error');}}
+        async function addChick(){if(!sb){toast('اتصل أولاً','warning');return;}const eId=document.getElementById('cEgg').value;const date=document.getElementById('cDate').value;if(!eId||!date){toast('البيضة والتاريخ مطلوبان','error');return;}const egg=eggs.find(e=>e.id===eId);const img=document.getElementById('cImg').files[0];let imgB64=null;if(img)imgB64=await toB64(img);try{await sb.from('chicks').insert([{egg_id:eId,male_id:egg?.male_id,female_id:egg?.female_id,male_name:egg?.male_name,female_name:egg?.female_name,name:document.getElementById('cName').value.trim()||null,code:document.getElementById('cCode').value.trim()||null,ring_number:document.getElementById('cRing').value.trim()||null,gender:document.getElementById('cGender').value||null,type:document.getElementById('cType').value.trim()||null,color:document.getElementById('cColor').value.trim()||null,birth_date:date,status:document.getElementById('cStatus').value,notes:document.getElementById('cNotes').value.trim()||null,image:imgB64}]);await sb.from('eggs').update({status:'تم الفقس',chicks_count:(egg?.chicks_count||0)+1}).eq('id',eId);toast('تم التسجيل ✅','success');clearChickForm();toggleForm('chickForm');await loadAll();}catch(e){toast('خطأ: '+e.message,'error');}}
+        function showParents(data=null){const list=data||parents;const c=document.getElementById('parentsList');if(list.length===0){c.innerHTML='<div class="empty-state"><div class="empty-state-icon">🐦</div><div class="empty-state-text">لا توجد طيور</div><div class="empty-state-subtext">ابدأ بإضافة طائر</div></div>';return;}c.innerHTML=list.map(p=>`<div class="card">${p.image?`<img src="${p.image}" class="card-image">`:''}
+        <div class="card-header"><div class="card-title"><span class="gender-${p.gender==='ذكر'?'male':'female'}">${p.gender==='ذكر'?'♂️':'♀️'}</span> ${p.name||p.code}</div>
+        <div class="card-actions">
+        <button onclick="editParent('${p.id}')" class="info small">✏️</button>
+        <button onclick="changeParentStatus('${p.id}')" class="warning small">🔄</button>
+        <button onclick="delParent('${p.id}')" class="danger small">🗑️</button>
+        </div></div>
+        <div class="card-info"><span class="card-info-label">الكود:</span> ${p.code}</div>
+        <div class="card-info"><span class="card-info-label">الجنس:</span> ${p.gender}</div>
+        ${p.type?`<div class="card-info"><span class="card-info-label">النوع:</span> ${p.type}</div>`:''}
+        ${p.color?`<div class="card-info"><span class="card-info-label">اللون:</span> ${p.color}</div>`:''}
+        <div class="card-info"><span class="card-info-label">الحالة:</span> <span class="status-badge status-${p.status}">${p.status}</span></div>
+        ${p.notes?`<div class="card-info"><span class="card-info-label">ملاحظات:</span> ${p.notes}</div>`:''}
+        </div>`).join('');}
+        function showEggs(data=null){const list=data||eggs;const c=document.getElementById('eggsList');if(list.length===0){c.innerHTML='<div class="empty-state"><div class="empty-state-icon">🥚</div><div class="empty-state-text">لا يوجد بيض</div><div class="empty-state-subtext">ابدأ بإضافة بيض</div></div>';return;}c.innerHTML=list.map(e=>{const days=Math.ceil((new Date(e.expected_hatch_date)-new Date())/(1000*60*60*24));const cdClass=days<=2?'critical':days<=5?'warning':'';return`<div class="card">
+        <div class="card-header"><div class="card-title">🥚 ${e.cage_number}</div>
+        <div class="card-actions">
+        <button onclick="editEgg('${e.id}')" class="info small">✏️</button>
+        <button onclick="changeEggStatus('${e.id}')" class="warning small">🔄</button>
+        </div></div>
+        <div class="card-info"><span class="card-info-label">الأب:</span> ${e.male_name||'؟'}</div>
+        <div class="card-info"><span class="card-info-label">الأم:</span> ${e.female_name||'؟'}</div>
+        <div class="card-info"><span class="card-info-label">التاريخ:</span> ${new Date(e.egg_date).toLocaleDateString('ar')}</div>
+        <div class="card-info"><span class="card-info-label">الفقس المتوقع:</span> ${new Date(e.expected_hatch_date).toLocaleDateString('ar')}</div>
+        <div class="card-info"><span class="card-info-label">الحالة:</span> ${e.status}</div>
+        ${e.status==='قيد التحضين'?`<div class="countdown ${cdClass}">⏰ ${days>0?days+' يوم':'اليوم!'}</div>`:''}
+        </div>`;}).join('');}
+        function showChicks(data=null){const list=data||chicks;const c=document.getElementById('chicksList');if(list.length===0){c.innerHTML='<div class="empty-state"><div class="empty-state-icon">🐤</div><div class="empty-state-text">لا توجد أفراخ</div><div class="empty-state-subtext">ابدأ بإضافة فرخ</div></div>';return;}c.innerHTML=list.map(ch=>{const age=Math.floor((new Date()-new Date(ch.birth_date))/(1000*60*60*24));const gIcon=ch.gender==='ذكر'?'♂️':ch.gender==='أنثى'?'♀️':'❓';return`<div class="card">${ch.image?`<img src="${ch.image}" class="card-image">`:''}
+        <div class="card-header"><div class="card-title">🐤 ${ch.name||ch.code||ch.ring_number||'فرخ'} ${gIcon}</div>
+        <div class="card-actions">
+        <button onclick="editChick('${ch.id}')" class="info small">✏️</button>
+        <button onclick="changeChickStatus('${ch.id}')" class="warning small">🔄</button>
+        <button onclick="delChick('${ch.id}')" class="danger small">🗑️</button>
+        </div></div>
+        ${ch.code?`<div class="card-info"><span class="card-info-label">الكود:</span> ${ch.code}</div>`:''}
+        ${ch.ring_number?`<div class="card-info"><span class="card-info-label">الحلقة:</span> ${ch.ring_number}</div>`:''}
+        ${ch.gender?`<div class="card-info"><span class="card-info-label">الجنس:</span> ${ch.gender}</div>`:''}
+        <div class="card-info"><span class="card-info-label">الأب:</span> ${ch.male_name||'؟'}</div>
+        <div class="card-info"><span class="card-info-label">الأم:</span> ${ch.female_name||'؟'}</div>
+        ${ch.type?`<div class="card-info"><span class="card-info-label">النوع:</span> ${ch.type}</div>`:''}
+        <div class="card-info"><span class="card-info-label">العمر:</span> ${age} يوم</div>
+        <div class="card-info"><span class="card-info-label">الحالة:</span> <span class="status-badge status-${ch.status.replace(' ','-')}">${ch.status}</span></div>
+        </div>`;}).join('');}
+        function updateDrops(){const m=parents.filter(p=>p.gender==='ذكر'&&p.status==='حي');const f=parents.filter(p=>p.gender==='أنثى'&&p.status==='حي');const h=eggs.filter(e=>e.status==='تم الفقس');document.getElementById('eMale').innerHTML='<option value="">-- اختر --</option>'+m.map(x=>`<option value="${x.id}">${x.name||x.code}</option>`).join('');document.getElementById('eFemale').innerHTML='<option value="">-- اختر --</option>'+f.map(x=>`<option value="${x.id}">${x.name||x.code}</option>`).join('');document.getElementById('cEgg').innerHTML='<option value="">-- اختر --</option>'+h.map(e=>`<option value="${e.id}">🥚 ${e.cage_number}</option>`).join('');}
+        function filterParents(){const s=document.getElementById('pSearch').value.toLowerCase();const g=document.getElementById('pGenderF').value;const st=document.getElementById('pStatusF').value;let f=parents;if(g!=='all')f=f.filter(p=>p.gender===g);if(st!=='all')f=f.filter(p=>p.status===st);if(s)f=f.filter(p=>(p.name&&p.name.toLowerCase().includes(s))||(p.code&&p.code.toLowerCase().includes(s))||(p.type&&p.type.toLowerCase().includes(s))||(p.color&&p.color.toLowerCase().includes(s)));showParents(f);}
+        function filterEggs(){const s=document.getElementById('eSearch').value.toLowerCase();const st=document.getElementById('eStatusF').value;let f=eggs;if(st!=='all')f=f.filter(e=>e.status===st);if(s)f=f.filter(e=>(e.cage_number&&e.cage_number.toLowerCase().includes(s))||(e.male_name&&e.male_name.toLowerCase().includes(s))||(e.female_name&&e.female_name.toLowerCase().includes(s)));showEggs(f);}
+        function filterChicks(){const s=document.getElementById('cSearch').value.toLowerCase();const g=document.getElementById('cGenderF').value;const st=document.getElementById('cStatusF').value;let f=chicks;if(g!=='all')f=f.filter(c=>c.gender===g);if(st!=='all')f=f.filter(c=>c.status===st);if(s)f=f.filter(c=>(c.name&&c.name.toLowerCase().includes(s))||(c.code&&c.code.toLowerCase().includes(s))||(c.ring_number&&c.ring_number.toLowerCase().includes(s)));showChicks(f);}
+        async function changeParentStatus(id){const p=parents.find(x=>x.id===id);if(!p)return;const opts=['حي','متوفي','مباع'];const current=opts.indexOf(p.status);const next=opts[(current+1)%opts.length];if(confirm(`تغيير من "${p.status}" إلى "${next}"؟`)){try{await sb.from('parents').update({status:next}).eq('id',id);toast('تم ✅','success');await loadAll();}catch(e){toast('خطأ: '+e.message,'error');}}}
+        async function changeEggStatus(id){const e=eggs.find(x=>x.id===id);if(!e)return;const opts=['قيد التحضين','تم الفقس','فشل الفقس'];const current=opts.indexOf(e.status);const next=opts[(current+1)%opts.length];if(confirm(`تغيير من "${e.status}" إلى "${next}"؟`)){try{await sb.from('eggs').update({status:next}).eq('id',id);toast('تم ✅','success');await loadAll();}catch(e){toast('خطأ: '+e.message,'error');}}}
+        async function changeChickStatus(id){const c=chicks.find(x=>x.id===id);if(!c)return;const opts=['حي','متوفي','مباع','أصبح أب'];const current=opts.indexOf(c.status);const next=opts[(current+1)%opts.length];if(confirm(`تغيير من "${c.status}" إلى "${next}"؟`)){try{await sb.from('chicks').update({status:next}).eq('id',id);toast('تم ✅','success');await loadAll();}catch(e){toast('خطأ: '+e.message,'error');}}}
+        function editParent(id){const p=parents.find(x=>x.id===id);if(!p)return;openModal('✏️ تعديل طائر',`<div class="form-group"><label>الاسم:</label><input type="text" id="editName" value="${p.name||''}"></div>
+        <div class="form-group"><label>النوع:</label><input type="text" id="editType" value="${p.type||''}"></div>
+        <div class="form-group"><label>اللون:</label><input type="text" id="editColor" value="${p.color||''}"></div>
+        <div class="form-group"><label>الحالة:</label><select id="editStatus"><option value="حي" ${p.status==='حي'?'selected':''}>حي</option><option value="متوفي" ${p.status==='متوفي'?'selected':''}>متوفي</option><option value="مباع" ${p.status==='مباع'?'selected':''}>مباع</option></select></div>
+        <div class="form-group"><label>ملاحظات:</label><textarea id="editNotes" rows="2">${p.notes||''}</textarea></div>
+        <button onclick="saveParentEdit('${id}')">💾 حفظ</button>`);}
+        function editEgg(id){const e=eggs.find(x=>x.id===id);if(!e)return;openModal('✏️ تعديل بيض',`<div class="form-group"><label>القفص:</label><input type="text" id="editCage" value="${e.cage_number}"></div>
+        <div class="form-group"><label>الحالة:</label><select id="editStatus"><option value="قيد التحضين" ${e.status==='قيد التحضين'?'selected':''}>التحضين</option><option value="تم الفقس" ${e.status==='تم الفقس'?'selected':''}>فقس</option><option value="فشل الفقس" ${e.status==='فشل الفقس'?'selected':''}>فشل</option></select></div>
+        <div class="form-group"><label>ملاحظات:</label><textarea id="editNotes" rows="2">${e.notes||''}</textarea></div>
+        <button onclick="saveEggEdit('${id}')">💾 حفظ</button>`);}
+        function editChick(id){const c=chicks.find(x=>x.id===id);if(!c)return;openModal('✏️ تعديل فرخ',`<div class="form-group"><label>الاسم:</label><input type="text" id="editName" value="${c.name||''}"></div>
+        <div class="form-group"><label>الكود:</label><input type="text" id="editCode" value="${c.code||''}"></div>
+        <div class="form-group"><label>الحلقة:</label><input type="text" id="editRing" value="${c.ring_number||''}"></div>
+        <div class="form-group"><label>النوع:</label><input type="text" id="editType" value="${c.type||''}"></div>
+        <div class="form-group"><label>اللون:</label><input type="text" id="editColor" value="${c.color||''}"></div>
+        <div class="form-group"><label>الحالة:</label><select id="editStatus"><option value="حي" ${c.status==='حي'?'selected':''}>حي</option><option value="متوفي" ${c.status==='متوفي'?'selected':''}>متوفي</option><option value="مباع" ${c.status==='مباع'?'selected':''}>مباع</option><option value="أصبح أب" ${c.status==='أصبح أب'?'selected':''}>أصبح أب</option></select></div>
+        <div class="form-group"><label>ملاحظات:</label><textarea id="editNotes" rows="2">${c.notes||''}</textarea></div>
+        <button onclick="saveChickEdit('${id}')">💾 حفظ</button>`);}
+        async function saveParentEdit(id){try{await sb.from('parents').update({name:document.getElementById('editName').value.trim()||null,type:document.getElementById('editType').value.trim()||null,color:document.getElementById('editColor').value.trim()||null,status:document.getElementById('editStatus').value,notes:document.getElementById('editNotes').value.trim()||null}).eq('id',id);toast('تم ✅','success');closeModal();await loadAll();}catch(e){toast('خطأ: '+e.message,'error');}}
+        async function saveEggEdit(id){try{await sb.from('eggs').update({cage_number:document.getElementById('editCage').value.trim(),status:document.getElementById('editStatus').value,notes:document.getElementById('editNotes').value.trim()||null}).eq('id',id);toast('تم ✅','success');closeModal();await loadAll();}catch(e){toast('خطأ: '+e.message,'error');}}
+        async function saveChickEdit(id){try{await sb.from('chicks').update({name:document.getElementById('editName').value.trim()||null,code:document.getElementById('editCode').value.trim()||null,ring_number:document.getElementById('editRing').value.trim()||null,type:document.getElementById('editType').value.trim()||null,color:document.getElementById('editColor').value.trim()||null,status:document.getElementById('editStatus').value,notes:document.getElementById('editNotes').value.trim()||null}).eq('id',id);toast('تم ✅','success');closeModal();await loadAll();}catch(e){toast('خطأ: '+e.message,'error');}}
+        async function delParent(id){if(!confirm('حذف؟'))return;try{await sb.from('parents').delete().eq('id',id);toast('تم','success');await loadAll();}catch(e){toast('خطأ: '+e.message,'error');}}
+        async function delChick(id){if(!confirm('حذف؟'))return;try{await sb.from('chicks').delete().eq('id',id);toast('تم','success');await loadAll();}catch(e){toast('خطأ: '+e.message,'error');}}
+        function openModal(title,body){document.getElementById('modalTitle').textContent=title;document.getElementById('modalBody').innerHTML=body;document.getElementById('editModal').classList.add('active');}
+        function closeModal(){document.getElementById('editModal').classList.remove('active');}
+        function exportData(){const data={parents,eggs,chicks,exportDate:new Date().toISOString(),farmName:'Youssef_Loft'};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`youssef_loft_${new Date().toISOString().split('T')[0]}.json`;link.click();toast('تم التصدير ✅','success');}
+        function toB64(file){return new Promise((res,rej)=>{const reader=new FileReader();reader.onload=()=>res(reader.result);reader.onerror=rej;reader.readAsDataURL(file);});}
+        function prevImg(input,previewId){const prev=document.getElementById(previewId);if(input.files&&input.files[0]){const reader=new FileReader();reader.onload=e=>{prev.innerHTML=`<img src="${e.target.result}">`;};reader.readAsDataURL(input.files[0]);}}
+        function clearForm(ids){ids.forEach(id=>{const el=document.getElementById(id);if(el){if(el.type==='file')el.value='';else if(el.tagName==='SELECT')el.selectedIndex=0;else el.value='';}});}
+        window.onload=async()=>{const u=localStorage.getItem('sbUrl');const k=localStorage.getItem('sbKey');if(u&&k){document.getElementById('sbUrl').value=u;document.getElementById('sbKey').value=k;await connectSb();}const today=new Date().toISOString().split('T')[0];document.getElementById('eDate').value=today;document.getElementById('cDate').value=today;toast('مرحباً! 🐦','success');};
+    </script>
+</body>
+</html>
